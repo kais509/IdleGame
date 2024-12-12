@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#F5F5F5">
+    android:background="#1A1A1A">
 
     <!-- Game View -->
     <com.example.idlegameapp.GameView
@@ -11,8 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:layout_alignParentTop="true"
-        android:layout_marginBottom="24dp"
-        android:background="#1A1A1A" />
+        android:layout_marginBottom="24dp" />
 
     <!-- Currency Counter -->
     <TextView
@@ -25,10 +25,10 @@
         android:text="Currency: 0.00"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="#1A1A1A" />
+        android:textColor="#FFFFFF" />
 
     <!-- Flat Upgrade Button -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/flatUpgradeButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -37,11 +37,12 @@
         android:layout_marginTop="8dp"
         android:padding="16dp"
         android:textSize="16sp"
-        android:backgroundTint="#4CAF50"
-        android:text="Add Dot (10.00)" />
+        app:backgroundTint="#4CAF50"
+        android:text="Add Dot (10.00)"
+        app:cornerRadius="24dp" />
 
     <!-- Multiplier Upgrade Button -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/multiplierUpgradeButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,8 +51,9 @@
         android:layout_marginTop="8dp"
         android:padding="16dp"
         android:textSize="16sp"
-        android:backgroundTint="#2196F3"
-        android:text="Increase Speed (50.00)" />
+        app:backgroundTint="#2196F3"
+        android:text="Speed x1.1 (50.00)"
+        app:cornerRadius="24dp" />
 
     <!-- Exponent Upgrade Button -->
     <Button
@@ -64,6 +66,8 @@
         android:padding="16dp"
         android:textSize="16sp"
         android:backgroundTint="#FF9800"
-        android:text="New Line (200.00)" />
+        android:text="New Line (200.00)"
+        app:cornerRadius="24dp"
+        android:elevation="4dp" />
 
 </RelativeLayout>
