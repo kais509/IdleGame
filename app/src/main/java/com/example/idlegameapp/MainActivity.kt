@@ -1,4 +1,4 @@
-package com.example.idlegame
+package com.example.idlegameapp
 
 import android.os.Bundle
 import android.os.Handler
@@ -6,22 +6,23 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.Button
 import android.widget.TextView
-import com.example.idlegameapp.R
+import com.example.idlegameapp.GameView
+import com.example.idlegameapp.DotCollisionListener
 
-class MainActivity : AppCompatActivity() {
-    private var currency: Double = 1000.0 // Total currency
-    private var baseCurrencyPerSecond: Double = 1.0 // Base currency per second
-    private var multiplier: Double = 1.0 // Multiplier for currency per second
-    private var exponent: Double = 1.0 // Exponent for currency per second
-
-    private var flatUpgradeCost: Double = 10.0
+class MainActivity : AppCompatActivity(), DotCollisionListener {
+    private var currency: Double = 100000.0 // Total currency
     private var multiplierUpgradeCost: Double = 50.0
     private var exponentUpgradeCost: Double = 200.0
 
+    private var flatUpgradeCost: Double = 10.0
+
     private lateinit var currencyTextView: TextView
+    private lateinit var currencyPerSecondTextView: TextView
     private lateinit var flatUpgradeButton: Button
     private lateinit var multiplierUpgradeButton: Button
     private lateinit var exponentUpgradeButton: Button
+    private lateinit var gameView: GameView
+
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +33,8 @@ class MainActivity : AppCompatActivity() {
         flatUpgradeButton = findViewById(R.id.flatUpgradeButton)
         multiplierUpgradeButton = findViewById(R.id.multiplierUpgradeButton)
         exponentUpgradeButton = findViewById(R.id.exponentUpgradeButton)
+        gameView = findViewById(R.id.gameView)
+        gameView.setDotCollisionListener(this)
 
         updateUI()
         startIncrementing()
@@ -44,10 +47,8 @@ class MainActivity : AppCompatActivity() {
     private fun startIncrementing() {
         handler.post(object : Runnable {
             override fun run() {
-                val currencyPerSecond = Math.pow(baseCurrencyPerSecond * multiplier, exponent)
-                currency += currencyPerSecond
-                updateUI()
-                handler.postDelayed(this, 1000) // Repeat every second
+                gameView.updateDots(0.016f) // Just update dot positions
+                handler.postDelayed(this, 16) // Keep the 60 FPS animation
             }
         })
     }
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
     private fun buyFlatUpgrade() {
         if (currency >= flatUpgradeCost) {
             currency -= flatUpgradeCost
-            baseCurrencyPerSecond += 1.0
+            gameView.addDotToLine() // Add a dot as a visual representation of the upgrade
             flatUpgradeCost *= 1.5 // Cost increases
             updateUI()
         }
@@ -64,8 +65,8 @@ class MainActivity : AppCompatActivity() {
     private fun buyMultiplierUpgrade() {
         if (currency >= multiplierUpgradeCost) {
             currency -= multiplierUpgradeCost
-            multiplier += 0.1
-            multiplierUpgradeCost *= 2.0 // Cost increases
+            gameView.increaseSpeed()  // Increase speed level
+            multiplierUpgradeCost *= 1.5 // Cost increases
             updateUI()
         }
     }
@@ -73,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private fun buyExponentUpgrade() {
         if (currency >= exponentUpgradeCost) {
             currency -= exponentUpgradeCost
-            exponent += 0.1
+            gameView.addLine() // Add a new line for this upgrade
             exponentUpgradeCost *= 3.0 // Cost increases
             updateUI()
         }
@@ -81,14 +82,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI() {
         currencyTextView.text = "Currency: ${"%.2f".format(currency)}"
-
-        flatUpgradeButton.text = "Flat Upgrade (+1/sec): ${"%.2f".format(flatUpgradeCost)}"
-        multiplierUpgradeButton.text = "Multiplier Upgrade (x1.1): ${"%.2f".format(multiplierUpgradeCost)}"
-        exponentUpgradeButton.text = "Exponent Upgrade (^1.1): ${"%.2f".format(exponentUpgradeCost)}"
+        
+        flatUpgradeButton.text = "Add Dot (${"%.2f".format(flatUpgradeCost)})"
+        multiplierUpgradeButton.text = "Speed x1.1 (${"%.2f".format(multiplierUpgradeCost)})"
+        exponentUpgradeButton.text = "New Line (${"%.2f".format(exponentUpgradeCost)})"
     }
 
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null) // Stop the loop when the activity is destroyed
+    }
+
+    override fun onDotHitEnd() {
+        currency += 1.0
+        updateUI()
     }
 }

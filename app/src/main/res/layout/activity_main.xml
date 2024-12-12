@@ -2,48 +2,68 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="#F5F5F5">
+
+    <!-- Game View -->
+    <com.example.idlegameapp.GameView
+        android:id="@+id/gameView"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="24dp"
+        android:background="#1A1A1A" />
 
     <!-- Currency Counter -->
     <TextView
         android:id="@+id/currencyTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/gameView"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:text="Currency: 0.00"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="#000000" />
+        android:textColor="#1A1A1A" />
 
     <!-- Flat Upgrade Button -->
     <Button
         android:id="@+id/flatUpgradeButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/currencyTextView"
-        android:layout_marginTop="16dp"
-        android:layout_centerHorizontal="true"
-        android:text="Flat Upgrade (+1/sec): 10.00" />
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"
+        android:textSize="16sp"
+        android:backgroundTint="#4CAF50"
+        android:text="Add Dot (10.00)" />
 
     <!-- Multiplier Upgrade Button -->
     <Button
         android:id="@+id/multiplierUpgradeButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/flatUpgradeButton"
-        android:layout_marginTop="16dp"
-        android:layout_centerHorizontal="true"
-        android:text="Multiplier Upgrade (x1.1): 50.00" />
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"
+        android:textSize="16sp"
+        android:backgroundTint="#2196F3"
+        android:text="Increase Speed (50.00)" />
 
     <!-- Exponent Upgrade Button -->
     <Button
         android:id="@+id/exponentUpgradeButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/multiplierUpgradeButton"
-        android:layout_marginTop="16dp"
-        android:layout_centerHorizontal="true"
-        android:text="Exponent Upgrade (^1.1): 200.00" />
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"
+        android:textSize="16sp"
+        android:backgroundTint="#FF9800"
+        android:text="New Line (200.00)" />
 
 </RelativeLayout>

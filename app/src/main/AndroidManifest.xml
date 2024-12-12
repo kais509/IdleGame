@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
-            android:name="com.example.idlegame.MainActivity"
+            android:name="com.example.idlegameapp.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/AppTheme">
