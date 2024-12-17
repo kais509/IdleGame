@@ -6,7 +6,6 @@
     android:padding="16dp"
     android:background="#1A1A1A">
 
-    <!-- Game View -->
     <com.example.idlegameapp.GameView
         android:id="@+id/gameView"
         android:layout_width="match_parent"
@@ -14,60 +13,124 @@
         android:layout_alignParentTop="true"
         android:layout_marginBottom="24dp" />
 
-    <!-- Currency Counter -->
     <TextView
         android:id="@+id/currencyTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/gameView"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp"
-        android:text="Currency: 0.00"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF" />
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:text="Currency: 0" />
 
-    <!-- Flat Upgrade Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/flatUpgradeButton"
+    <TextView
+        android:id="@+id/currencyPerSecondView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/currencyTextView"
+        android:layout_centerHorizontal="true"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:text="(0/sec)"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- 2x2 Grid of Upgrade Buttons -->
+    <GridLayout
+        android:id="@+id/upgradeGrid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/currencyTextView"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="8dp"
-        android:padding="16dp"
-        android:textSize="16sp"
-        app:backgroundTint="#4CAF50"
-        android:text="Add Dot (10.00)"
-        app:cornerRadius="24dp" />
+        android:layout_marginTop="16dp"
+        android:columnCount="2"
+        android:rowCount="2"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true">
 
-    <!-- Multiplier Upgrade Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/multiplierUpgradeButton"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/flatUpgradeButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:backgroundTint="#4CAF50"
+            app:cornerRadius="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/multiplierUpgradeButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:backgroundTint="#2196F3"
+            app:cornerRadius="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/exponentUpgradeButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:backgroundTint="#FF9800"
+            app:cornerRadius="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/autoClickerUpgradeButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:padding="16dp"
+            android:textSize="14sp"
+            app:backgroundTint="#E91E63"
+            app:cornerRadius="24dp" />
+
+    </GridLayout>
+
+    <!-- Navigation Buttons Container -->
+    <LinearLayout
+        android:id="@+id/navigationButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/flatUpgradeButton"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="8dp"
-        android:padding="16dp"
-        android:textSize="16sp"
-        app:backgroundTint="#2196F3"
-        android:text="Speed x1.1 (50.00)"
-        app:cornerRadius="24dp" />
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:weightSum="3">
 
-    <!-- Exponent Upgrade Button -->
-    <Button
-        android:id="@+id/exponentUpgradeButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/multiplierUpgradeButton"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="8dp"
-        android:padding="16dp"
-        android:textSize="16sp"
-        android:backgroundTint="#FF9800"
-        android:text="New Line (200.00)"
-        app:cornerRadius="24dp"
-        android:elevation="4dp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/prestigeButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:text="⚡"
+            android:textSize="20sp"
+            app:cornerRadius="12dp"
+            app:backgroundTint="#9C27B0"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/statsButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:text="📊"
+            android:textSize="20sp"
+            app:cornerRadius="12dp"
+            app:backgroundTint="#424242"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settingsButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_margin="4dp"
+            android:text="⚙️"
+            android:textSize="20sp"
+            app:cornerRadius="12dp"
+            app:backgroundTint="#424242"/>
+
+    </LinearLayout>
 
 </RelativeLayout>
