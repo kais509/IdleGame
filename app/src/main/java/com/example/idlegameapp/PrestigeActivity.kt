@@ -1,135 +1,155 @@
 package com.example.idlegameapp
 
-
+import com.example.idlegameapp.SkillTreeView
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.idlegameapp.R
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.example.idlegameapp.GameManager
+import android.widget.Toast
+import kotlin.math.sqrt
 
 class PrestigeActivity : AppCompatActivity() {
+    private lateinit var skillTreeView: SkillTreeView
+    private lateinit var vertexEssenceText: TextView
+    private lateinit var prestigeButton: MaterialButton
+    private lateinit var homeButton: MaterialButton
+    private lateinit var prestigeInfoText: TextView
+    
     private var vertexEssence = 0
-    private val skillTreeManager = SkillTreeManager()
+    private lateinit var skillTreeManager: SkillTreeManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_prestige)
 
-        // Load saved prestige currency and skill levels
+        // Initialize managers
+        skillTreeManager = SkillTreeManager()
+
+        // Initialize views
+        skillTreeView = findViewById(R.id.skillTreeView)
+        vertexEssenceText = findViewById(R.id.vertexEssenceCount)
+        prestigeButton = findViewById(R.id.prestigeButton)
+        homeButton = findViewById(R.id.homeButton)
+        prestigeInfoText = findViewById(R.id.prestigeInfo)
+
+        // Load saved data and setup skill tree
         loadPrestigeData()
+        setupSkillTree()
 
-        // Calculate potential prestige currency
-        val currentCurrency = intent.getDoubleExtra("currentCurrency", 0.0)
-        val potentialGain = calculatePrestigeGain(currentCurrency)
-
-        // Update UI
-        updatePrestigeInfo(potentialGain)
-
-        // Setup skill tree buttons
-        setupSkillTreeButtons()
-
-        // Prestige button
-        findViewById<Button>(R.id.prestigeButton).setOnClickListener {
-            performPrestige(potentialGain)
+        // Setup prestige button
+        prestigeButton.setOnClickListener {
+            val gameManager = GameManager(this)
+            val currentCurrency = gameManager.getCurrency()
+            performPrestige(calculatePrestigeGain(currentCurrency))
         }
 
-        // Back button
-        findViewById<Button>(R.id.backButton).setOnClickListener {
-            finish()
+        // Setup home button
+        homeButton.setOnClickListener {
+            finish()  // This will return to the previous activity
         }
-    }
-
-    private fun setupSkillTreeButtons() {
-        findViewById<Button>(R.id.startingDotsSkill).setOnClickListener {
-            purchaseSkill("start_dots")
-        }
-
-        findViewById<Button>(R.id.baseSpeedSkill).setOnClickListener {
-            purchaseSkill("base_speed")
-        }
-
-        findViewById<Button>(R.id.currencyGainSkill).setOnClickListener {
-            purchaseSkill("currency_gain")
-        }
-
-        updateSkillButtons()
-    }
-
-    private fun purchaseSkill(skillId: String) {
-        val newEssence = skillTreeManager.purchaseNode(skillId, vertexEssence)
-        if (newEssence != vertexEssence) {
-            vertexEssence = newEssence
-            updateSkillButtons()
-            savePrestigeData()
-        }
-    }
-
-    private fun updateSkillButtons() {
-        skillTreeManager.getNode("start_dots")?.let { node ->
-            findViewById<Button>(R.id.startingDotsSkill).apply {
-                text = "Starting Dots (${node.level}/${node.maxLevel})\nCost: ${node.getCurrentCost()}"
-                isEnabled = node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())
-            }
-        }
-
-        skillTreeManager.getNode("base_speed")?.let { node ->
-            findViewById<Button>(R.id.baseSpeedSkill).apply {
-                text = "Base Speed (${node.level}/${node.maxLevel})\nCost: ${node.getCurrentCost()}"
-                isEnabled = node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())
-            }
-        }
-
-        skillTreeManager.getNode("currency_gain")?.let { node ->
-            findViewById<Button>(R.id.currencyGainSkill).apply {
-                text = "Currency Gain (${node.level}/${node.maxLevel})\nCost: ${node.getCurrentCost()}"
-                isEnabled = node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())
-            }
-        }
-
-        findViewById<TextView>(R.id.vertexEssenceCount).text = "Vertex Essence: $vertexEssence"
     }
 
     private fun loadPrestigeData() {
-        val prefs = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
-        vertexEssence = prefs.getInt("vertexEssence", 0)
+        val sharedPreferences = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
         
-        // Load skill levels
-        val skillLevels = mutableMapOf<String, Int>()
-        skillLevels["start_dots"] = prefs.getInt("skill_start_dots", 0)
-        skillLevels["base_speed"] = prefs.getInt("skill_base_speed", 0)
-        skillLevels["currency_gain"] = prefs.getInt("skill_currency_gain", 0)
-        
-        skillTreeManager.loadState(skillLevels)
-    }
-
-    private fun savePrestigeData() {
-        val prefs = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE).edit()
-        prefs.putInt("vertexEssence", vertexEssence)
-        
-        // Save skill levels
-        val skillLevels = skillTreeManager.getState()
-        skillLevels.forEach { (id, level) ->
-            prefs.putInt("skill_$id", level)
+        // Check if this is the first time (no saved data)
+        if (!sharedPreferences.contains("vertexEssence")) {
+            // Initialize with 100 vertex essence
+            sharedPreferences.edit()
+                .putInt("vertexEssence", 100)
+                .apply()
         }
         
-        prefs.apply()
+        vertexEssence = sharedPreferences.getInt("vertexEssence", 100)
+        updateVertexEssenceDisplay()
     }
 
-    private fun calculatePrestigeGain(currency: Double): Int {
-        return (Math.sqrt(currency / 1000.0)).toInt()
+    private fun updateVertexEssenceDisplay() {
+        vertexEssenceText.text = "Vertex Essence: $vertexEssence"
     }
 
-    private fun updatePrestigeInfo(potentialGain: Int) {
-        findViewById<TextView>(R.id.vertexEssenceCount).text = "Vertex Essence: $vertexEssence"
-        findViewById<TextView>(R.id.prestigeInfo).text =
-            "Resetting will give you:\n$potentialGain Vertex Essence"
+    private fun setupSkillTree() {
+        skillTreeView.removeAllViews()
+        
+        // Calculate center of screen
+        val centerX = resources.displayMetrics.widthPixels / 2f - 150f  // Half button width
+        
+        val nodePositions = mapOf(
+            // Center starting node
+            "start_dots" to Pair(centerX, 100f),
+            
+            // First tier upgrades below start_dots
+            "base_speed" to Pair(centerX - 200f, 450f),  // Left branch
+            "dot_value" to Pair(centerX + 200f, 450f),   // Right branch
+            
+            // Speed branch (left side)
+            "momentum" to Pair(centerX - 400f, 800f),    // Far left
+            "auto_dots" to Pair(centerX - 0f, 800f),     // Center left
+            
+            // Value branch (right side)
+            "lucky_dots" to Pair(centerX + 0f, 800f),    // Center right
+            "multi_lines" to Pair(centerX + 400f, 800f)  // Far right
+        )
+        
+        skillTreeManager.getSkillTree().forEach { node ->
+            nodePositions[node.id]?.let { (x, y) ->
+                skillTreeView.addSkillNode(node, x, y)
+            }
+        }
+        
+        skillTreeView.setOnNodeClickListener { node ->
+            showSkillDetails(node)
+        }
     }
 
-    private fun performPrestige(gain: Int) {
-        vertexEssence += gain
-        savePrestigeData()
-        setResult(RESULT_OK)
-        finish()
+    private fun showSkillDetails(node: SkillNode) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(node.name)
+            .setMessage("""
+                ${node.description}
+                Level: ${node.level}/${node.maxLevel}
+                Cost: ${node.getCurrentCost()} Vertex Essence
+            """.trimIndent())
+            .setPositiveButton("Upgrade") { _, _ ->
+                if (node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())) {
+                    vertexEssence = skillTreeManager.purchaseNode(node.id, vertexEssence)
+                    updateVertexEssenceDisplay()
+                    skillTreeView.updateNode(node.id)
+                } else {
+                    Toast.makeText(this, "Cannot upgrade this skill yet", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Close", null)
+            .create()
+        dialog.show()
+    }
+
+    private fun calculatePrestigeGain(currentCurrency: Double): Int {
+        return (sqrt(currentCurrency / 1e6)).toInt()
+    }
+
+    private fun performPrestige(essenceGain: Int) {
+        val gameManager = GameManager(this)
+        gameManager.setCurrency(0.0)  // Reset currency
+        vertexEssence += essenceGain
+        
+        // Save prestige data
+        getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
+            .edit()
+            .putInt("vertexEssence", vertexEssence)
+            .apply()
+            
+        updateVertexEssenceDisplay()
+        Toast.makeText(this, "Gained $essenceGain Vertex Essence!", Toast.LENGTH_LONG).show()
     }
 } 

@@ -1,62 +1,81 @@
 package com.example.idlegameapp
 
 class SkillTreeManager {
-    private val nodes = mutableMapOf<String, SkillNode>()
+    private val skillTree = mutableListOf<SkillNode>()
     private val unlockedNodes = mutableSetOf<String>()
 
     init {
-        // Root node (no prerequisites)
-        nodes["start_dots"] = SkillNode(
+        // Initial node
+        skillTree.add(SkillNode(
             id = "start_dots",
             name = "Starting Dots",
-            description = "Start with additional dots",
-            baseCost = 1,
-            prerequisites = listOf()  // No prerequisites
-        )
-
-        // Tier 2 nodes (require start_dots)
-        nodes["base_speed"] = SkillNode(
+            description = "Increase starting number of dots",
+            maxLevel = 5
+        ))
+        
+        // First tier upgrades
+        skillTree.add(SkillNode(
             id = "base_speed",
             name = "Base Speed",
-            description = "Increase base movement speed by 10%",
-            baseCost = 2,
+            description = "Increase base movement speed",
+            maxLevel = 5,
             prerequisites = listOf("start_dots")
-        )
-
-        nodes["currency_gain"] = SkillNode(
-            id = "currency_gain",
-            name = "Currency Gain",
-            description = "Increase currency per hit by 1",
-            baseCost = 3,
+        ))
+        
+        skillTree.add(SkillNode(
+            id = "dot_value",
+            name = "Dot Value",
+            description = "Increase currency from each dot",
+            maxLevel = 5,
             prerequisites = listOf("start_dots")
-        )
+        ))
+
+        // Speed branch
+        skillTree.add(SkillNode(
+            id = "momentum",
+            name = "Momentum",
+            description = "Dots move faster over time",
+            maxLevel = 3,
+            prerequisites = listOf("base_speed")
+        ))
+
+        skillTree.add(SkillNode(
+            id = "auto_dots",
+            name = "Auto Dots",
+            description = "Automatically add dots over time",
+            maxLevel = 3,
+            prerequisites = listOf("base_speed")
+        ))
+
+        // Value branch
+        skillTree.add(SkillNode(
+            id = "lucky_dots",
+            name = "Lucky Dots",
+            description = "Chance for dots to give bonus currency",
+            maxLevel = 3,
+            prerequisites = listOf("dot_value")
+        ))
+
+        skillTree.add(SkillNode(
+            id = "multi_lines",
+            name = "Multi Lines",
+            description = "Start with additional lines",
+            maxLevel = 3,
+            prerequisites = listOf("dot_value")
+        ))
     }
 
-    fun getNode(id: String): SkillNode? = nodes[id]
+    fun getSkillTree(): List<SkillNode> = skillTree
 
-    fun purchaseNode(id: String, availablePoints: Int): Int {
-        val node = nodes[id] ?: return availablePoints
-        if (node.canBePurchased(availablePoints, unlockedNodes)) {
-            val cost = node.getCurrentCost()
-            node.level++
-            unlockedNodes.add(node.id)
-            return availablePoints - cost
-        }
-        return availablePoints
+    fun getUnlockedNodes(): Set<String> = unlockedNodes
+
+    fun purchaseNode(nodeId: String, currentEssence: Int): Int {
+        val node = skillTree.find { it.id == nodeId } ?: return currentEssence
+        if (!node.canBePurchased(currentEssence, unlockedNodes)) return currentEssence
+        
+        val newEssence = currentEssence - node.getCurrentCost()
+        node.level++
+        unlockedNodes.add(nodeId)
+        return newEssence
     }
-
-    fun loadState(state: Map<String, Int>) {
-        state.forEach { (id, level) ->
-            nodes[id]?.let { node ->
-                node.level = level
-                if (level > 0) unlockedNodes.add(id)
-            }
-        }
-    }
-
-    fun getState(): Map<String, Int> {
-        return nodes.mapValues { it.value.level }
-    }
-
-    fun getUnlockedNodes(): Set<String> = unlockedNodes.toSet()
-} 
+}

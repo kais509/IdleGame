@@ -64,6 +64,10 @@ class GameView @JvmOverloads constructor(
     private var sideLength: Float = 0f
     private var updateCounter = 0
     private var lastLogTime = System.currentTimeMillis()
+    private var momentumLevel = 0
+    private var currentMomentumBonus = 1.0f
+    private var loopsCompleted = 0
+    private val maxMomentumBonus = 2.0f  // 200% max speed
 
     init {
         // Initialize with triangle but no dots
@@ -95,40 +99,28 @@ class GameView @JvmOverloads constructor(
     }
 
     fun updateDots(deltaTime: Float) {
-        updateDotPositions(deltaTime)
-    }
-
-    private fun updateDotPositions(deltaTime: Float) {
-        updateCounter++
-        
-        // Log every second
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastLogTime >= 1000) {
-            Log.d("GameView", "Updates per second: $updateCounter")
-            // Only log dot movement every 2 seconds
-            if ((currentTime / 2000) % 2 == 0L) {
-                val sampleDotMovement = dotSpeed * deltaTime
-                val actualDistancePerSecond = sampleDotMovement * updateCounter
-                Log.d("GameView", """
-                    Dot Speed Debug:
-                    - Base Speed: $baseSpeed
-                    - Speed Level: $speedLevel
-                    - Polygon Multiplier: $polygonSpeedMultiplier
-                    - Delta Time: $deltaTime
-                    - Movement per update: $sampleDotMovement
-                    - Movement per second: $actualDistancePerSecond
-                """.trimIndent())
-            }
-            updateCounter = 0
-            lastLogTime = currentTime
-        }
+        val prefs = context.getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
+        momentumLevel = prefs.getInt("skill_momentum", 0)
 
         for (line in lines) {
             val dotsToMove = ArrayList(line.dots)
             line.dots.clear()
             
             for (dot in dotsToMove) {
-                dot.position += dotSpeed * deltaTime * dot.direction
+                // Calculate momentum bonus (if skill is unlocked)
+                val momentumMultiplier = if (momentumLevel > 0) {
+                    val bonusPerLoop = (maxMomentumBonus - 1.0f) / (5f * momentumLevel)
+                    minOf(1.0f + (bonusPerLoop * loopsCompleted), maxMomentumBonus)
+                } else {
+                    1.0f
+                }
+
+                // Apply momentum to movement
+                val actualSpeed = baseSpeed * Math.pow(1.1, speedLevel.toDouble()).toFloat() * 
+                                (getCurrentSides() / 3f) * 
+                                momentumMultiplier
+
+                dot.position += actualSpeed * deltaTime * dot.direction
                 if (dot.position >= 1f) {
                     // Move to next line
                     val currentLineIndex = lines.indexOf(line)
@@ -162,31 +154,16 @@ class GameView @JvmOverloads constructor(
         // Increment sides for new polygon
         currentSides++
         
-        // Create new polygon with more sides
-        for (i in 0 until currentSides) {
-            val startAngle = 2.0 * Math.PI * i / currentSides
-            val endAngle = 2.0 * Math.PI * ((i + 1) % currentSides) / currentSides
-            
-            val startX = centerX + radius * Math.cos(startAngle).toFloat()
-            val startY = centerY + radius * Math.sin(startAngle).toFloat()
-            val endX = centerX + radius * Math.cos(endAngle).toFloat()
-            val endY = centerY + radius * Math.sin(endAngle).toFloat()
-            
-            lines.add(Line(startX, startY, endX, endY))
+        // Create the new polygon
+        createPolygon()
+        
+        // Restore dots to the first line
+        if (lines.isNotEmpty()) {
+            lines[0].dots.addAll(currentDots)
         }
         
-        // Redistribute existing dots evenly across the new shape
-        if (currentDots.isNotEmpty()) {
-            val dotsPerLine = currentDots.size / currentSides
-            val remainingDots = currentDots.size % currentSides
-            
-            for (i in 0 until currentSides) {
-                val numDotsForThisLine = dotsPerLine + (if (i < remainingDots) 1 else 0)
-                for (j in 0 until numDotsForThisLine) {
-                    lines[i].dots.add(Dot(position = 0.5f, direction = 1))
-                }
-            }
-        }
+        resetMomentum()  // Reset momentum when adding a line
+        invalidate()
     }
 
     private fun calculateDotPosition(line: Line, dot: Dot): Pair<Float, Float> {
@@ -274,4 +251,20 @@ class GameView @JvmOverloads constructor(
         radius = min(w, h) / 3f  // Use 1/3 of the smallest dimension
         createPolygon()  // Recreate polygon with new dimensions
     }
+
+    // Method to reset momentum when adding lines or changing shape
+    fun resetMomentum() {
+        currentMomentumBonus = 1.0f
+        loopsCompleted = 0
+    }
+
+    // Add getter for momentum bonus (useful for UI)
+    fun getCurrentMomentumBonus(): Float = currentMomentumBonus
+
+    // Add getter for loops completed
+    fun getLoopsCompleted(): Int = loopsCompleted
+
+    // Add getter for current dot count
+    fun getDotCount(): Int = numDots
+
 }

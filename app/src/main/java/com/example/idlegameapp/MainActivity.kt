@@ -13,6 +13,8 @@ import android.content.Context
 import kotlin.math.roundToInt
 import kotlin.math.tan
 import android.util.Log
+import android.view.View
+import java.util.*
 
 class MainActivity : AppCompatActivity(), DotCollisionListener {
     private var currency: Double = 100000.0 // Total currency
@@ -64,6 +66,13 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
     private var lineUpgradeCount = 0
     private var currencyMultiplierCount = 0
 
+    private var hitCounter = 0
+    private var lastAutoSpawnCheck = 0
+    private var lastSaveTime: Long = 0
+    private val random = Random()
+
+    private lateinit var momentumTextView: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -107,6 +116,18 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
 
         totalCurrencyEarned = getSharedPreferences("GameData", MODE_PRIVATE)
             .getFloat("totalCurrencyEarned", 0f)
+
+        // Load last save time for offline earnings
+        lastSaveTime = getSharedPreferences("GameData", MODE_PRIVATE)
+            .getLong("lastSaveTime", System.currentTimeMillis())
+        
+        // Calculate offline earnings
+        calculateOfflineEarnings()
+
+        momentumTextView = findViewById(R.id.momentumTextView)
+        
+        // Start the momentum update loop
+        startMomentumUpdates()
     }
 
     private fun startIncrementing() {
@@ -142,6 +163,7 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
         if (currency >= exponentUpgradeCost) {
             currency = (currency - exponentUpgradeCost).roundToInt().toDouble()
             gameView.addLine()
+            gameView.resetMomentum()  // Reset momentum when changing shape
             exponentUpgradeCost = (exponentUpgradeCost * 2.0).roundToInt().toDouble()
             lineUpgradeCount++
             updateUI()
@@ -299,5 +321,94 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
             .edit()
             .putFloat("totalCurrencyEarned", totalCurrencyEarned)
             .apply()
+        
+        // Save last time for offline calculations
+        getSharedPreferences("GameData", MODE_PRIVATE)
+            .edit()
+            .putLong("lastSaveTime", System.currentTimeMillis())
+            .apply()
+    }
+
+    fun onDotCollision() {
+        hitCounter++
+        
+        // Get prestige upgrades
+        val prefs = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
+        val currencyGainLevel = prefs.getInt("skill_currency_gain", 0)
+        val autoSpawnLevel = prefs.getInt("skill_auto_spawn", 0)
+        val critChanceLevel = prefs.getInt("skill_crit_chance", 0)
+        
+        // Apply currency gain and check for crits
+        var gainedCurrency = currencyPerHit * (1 + currencyGainLevel)
+        if (random.nextFloat() < critChanceLevel * 0.05f) { // 5% per level
+            gainedCurrency *= 2
+        }
+        
+        currency += gainedCurrency
+        
+        // Check for auto spawn
+        if (autoSpawnLevel > 0) {
+            val hitsNeeded = 1000
+            if (hitCounter - lastAutoSpawnCheck >= hitsNeeded) {
+                lastAutoSpawnCheck = hitCounter
+                val maxExtraDots = autoSpawnLevel
+                val currentDots = gameView.getDotCount()
+                if (currentDots < maxExtraDots + 1) { // +1 for the starting dot
+                    gameView.addDotToLine()
+                }
+            }
+        }
+        
+        updateUI()
+    }
+
+    private fun calculateOfflineEarnings() {
+        val prefs = getSharedPreferences("PrestigeData", MODE_PRIVATE)
+        val offlineGainLevel = prefs.getInt("skill_offline_gain", 0)
+        
+        if (offlineGainLevel > 0) {
+            val currentTime = System.currentTimeMillis()
+            val timeDiff = currentTime - lastSaveTime
+            val hoursPassed = timeDiff / (1000.0 * 60 * 60)
+            
+            // Calculate offline earnings (10% per level of what you'd earn if online)
+            val offlineRate = offlineGainLevel * 0.1f
+            val offlineEarnings = (calculateCurrencyPerSecond() * hoursPassed * offlineRate).toInt()
+            
+            if (offlineEarnings > 0) {
+                currency += offlineEarnings
+                // Maybe show a welcome back dialog here with earnings
+            }
+        }
+        
+        // Update last save time
+        lastSaveTime = System.currentTimeMillis()
+        getSharedPreferences("GameData", MODE_PRIVATE)
+            .edit()
+            .putLong("lastSaveTime", lastSaveTime)
+            .apply()
+    }
+
+    private fun startMomentumUpdates() {
+        handler.post(object : Runnable {
+            override fun run() {
+                updateMomentumDisplay()
+                handler.postDelayed(this, 500) // Update every half second
+            }
+        })
+    }
+
+    private fun updateMomentumDisplay() {
+        val prefs = getSharedPreferences("PrestigeData", MODE_PRIVATE)
+        val momentumLevel = prefs.getInt("skill_momentum", 0)
+        
+        if (momentumLevel > 0) {
+            val currentBonus = gameView.getCurrentMomentumBonus()
+            val loops = gameView.getLoopsCompleted()
+            momentumTextView.text = "Momentum: ${String.format("%.1f", currentBonus)}x\n(${loops} loops)"
+            momentumTextView.visibility = View.VISIBLE
+        } else {
+            momentumTextView.visibility = View.GONE
+        }
     }
 }

@@ -6,4 +6,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="skill_node_background">#424242</color>
+    <color name="skill_node_locked">#FF5722</color>
+    <color name="skill_node_unlocked">#4CAF50</color>
 </resources>

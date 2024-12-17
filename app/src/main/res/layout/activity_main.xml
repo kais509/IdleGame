@@ -34,6 +34,18 @@
         android:text="(0/sec)"
         android:layout_marginBottom="16dp"/>
 
+    <TextView
+        android:id="@+id/momentumTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/currencyPerSecondView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="4dp"
+        android:textColor="#4CAF50"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:text="Momentum: 1.0x" />
+
     <!-- 2x2 Grid of Upgrade Buttons -->
     <GridLayout
         android:id="@+id/upgradeGrid"

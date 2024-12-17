@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="skill_node_radius">8dp</dimen>
+    <dimen name="skill_node_elevation">4dp</dimen>
+    <dimen name="skill_node_size">100dp</dimen>
+</resources> 
