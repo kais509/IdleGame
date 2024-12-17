@@ -1,105 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#1A1A1A">
+    android:background="#121212">
 
-    <TextView
-        android:id="@+id/prestigeTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="32dp"
-        android:text="Geometric Ascension"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/vertexEssenceCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/prestigeTitle"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
-        android:text="Vertex Essence: 0"
-        android:textColor="#9C27B0"
-        android:textSize="24sp" />
-
-    <TextView
-        android:id="@+id/prestigeInfo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/vertexEssenceCount"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="32dp"
-        android:gravity="center"
-        android:text="Resetting will give you:\n0 Vertex Essence"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/prestigeButton"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/prestigeInfo"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="32dp"
-        android:padding="16dp"
-        android:text="Ascend"
-        android:textSize="20sp"
-        app:backgroundTint="#9C27B0"
-        app:cornerRadius="24dp" />
+        android:padding="16dp">
 
-    <!-- Meta Upgrades Section -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/prestigeButton"
-        android:layout_marginTop="32dp">
+        <TextView
+            android:id="@+id/vertexEssenceCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="Vertex Essence: 0"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp" />
 
+        <TextView
+            android:id="@+id/prestigeInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/vertexEssenceCount"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Resetting will give you:\n0 Vertex Essence"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+
+        <!-- Skill Tree Layout -->
         <LinearLayout
+            android:id="@+id/skillTreeContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_below="@id/prestigeInfo"
+            android:layout_marginTop="32dp"
             android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/metaUpgrade1"
+            <!-- Tier 1 (Root) -->
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="32dp"
-                android:layout_marginVertical="8dp"
-                android:padding="16dp"
-                android:text="Starting Dots +1 (Cost: 1)"
-                android:textSize="16sp"
-                app:backgroundTint="#673AB7"
-                app:cornerRadius="24dp" />
+                android:layout_marginBottom="24dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/metaUpgrade2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="32dp"
-                android:layout_marginVertical="8dp"
-                android:padding="16dp"
-                android:text="Base Speed +10% (Cost: 2)"
-                android:textSize="16sp"
-                app:backgroundTint="#673AB7"
-                app:cornerRadius="24dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/startingDotsSkill"
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Starting Dots (0/5)\nCost: 1"
+                    app:backgroundTint="#673AB7"
+                    app:cornerRadius="24dp" />
+            </FrameLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/metaUpgrade3"
+            <!-- Connection Line -->
+            <View
+                android:layout_width="2dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:background="#FFFFFF" />
+
+            <!-- Tier 2 -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="32dp"
-                android:layout_marginVertical="8dp"
-                android:padding="16dp"
-                android:text="Currency Gain +20% (Cost: 3)"
-                android:textSize="16sp"
-                app:backgroundTint="#673AB7"
-                app:cornerRadius="24dp" />
+                android:layout_marginBottom="24dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/baseSpeedSkill"
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="32dp"
+                    android:text="Base Speed (0/5)\nCost: 2"
+                    android:enabled="false"
+                    app:backgroundTint="#673AB7"
+                    app:cornerRadius="24dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/currencyGainSkill"
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:text="Currency Gain (0/5)\nCost: 3"
+                    android:enabled="false"
+                    app:backgroundTint="#673AB7"
+                    app:cornerRadius="24dp" />
+            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
-</RelativeLayout> 
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/prestigeButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/skillTreeContainer"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="32dp"
+            android:text="Ascend"
+            app:backgroundTint="#9C27B0"
+            app:cornerRadius="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/prestigeButton"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="16dp"
+            android:text="Back to Game"
+            app:backgroundTint="#424242"
+            app:cornerRadius="24dp" />
+
+    </RelativeLayout>
+
+</ScrollView> 

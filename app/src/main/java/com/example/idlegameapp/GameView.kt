@@ -206,7 +206,7 @@ class GameView @JvmOverloads constructor(
 
     fun resetGame() {
         lines.clear()
-        currentSides = 3
+        currentSides = 2
         speedLevel = 0
         numDots = 0
         addLine() // Recreate initial triangle

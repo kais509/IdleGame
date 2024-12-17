@@ -1,5 +1,6 @@
 package com.example.idlegameapp
 
+
 import android.content.Context
 import android.os.Bundle
 import android.widget.Button
@@ -9,15 +10,13 @@ import com.example.idlegameapp.R
 
 class PrestigeActivity : AppCompatActivity() {
     private var vertexEssence = 0
-    private var startingDotsLevel = 0
-    private var baseSpeedLevel = 0
-    private var currencyMultiplierLevel = 0
+    private val skillTreeManager = SkillTreeManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_prestige) 
+        setContentView(R.layout.activity_prestige)
 
-        // Load saved prestige currency and upgrades
+        // Load saved prestige currency and skill levels
         loadPrestigeData()
 
         // Calculate potential prestige currency
@@ -26,23 +25,95 @@ class PrestigeActivity : AppCompatActivity() {
 
         // Update UI
         updatePrestigeInfo(potentialGain)
-        updateMetaUpgradeButtons()
+
+        // Setup skill tree buttons
+        setupSkillTreeButtons()
 
         // Prestige button
         findViewById<Button>(R.id.prestigeButton).setOnClickListener {
             performPrestige(potentialGain)
         }
 
-        // Meta upgrade buttons
-        setupMetaUpgradeButtons()
+        // Back button
+        findViewById<Button>(R.id.backButton).setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun setupSkillTreeButtons() {
+        findViewById<Button>(R.id.startingDotsSkill).setOnClickListener {
+            purchaseSkill("start_dots")
+        }
+
+        findViewById<Button>(R.id.baseSpeedSkill).setOnClickListener {
+            purchaseSkill("base_speed")
+        }
+
+        findViewById<Button>(R.id.currencyGainSkill).setOnClickListener {
+            purchaseSkill("currency_gain")
+        }
+
+        updateSkillButtons()
+    }
+
+    private fun purchaseSkill(skillId: String) {
+        val newEssence = skillTreeManager.purchaseNode(skillId, vertexEssence)
+        if (newEssence != vertexEssence) {
+            vertexEssence = newEssence
+            updateSkillButtons()
+            savePrestigeData()
+        }
+    }
+
+    private fun updateSkillButtons() {
+        skillTreeManager.getNode("start_dots")?.let { node ->
+            findViewById<Button>(R.id.startingDotsSkill).apply {
+                text = "Starting Dots (${node.level}/${node.maxLevel})\nCost: ${node.getCurrentCost()}"
+                isEnabled = node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())
+            }
+        }
+
+        skillTreeManager.getNode("base_speed")?.let { node ->
+            findViewById<Button>(R.id.baseSpeedSkill).apply {
+                text = "Base Speed (${node.level}/${node.maxLevel})\nCost: ${node.getCurrentCost()}"
+                isEnabled = node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())
+            }
+        }
+
+        skillTreeManager.getNode("currency_gain")?.let { node ->
+            findViewById<Button>(R.id.currencyGainSkill).apply {
+                text = "Currency Gain (${node.level}/${node.maxLevel})\nCost: ${node.getCurrentCost()}"
+                isEnabled = node.canBePurchased(vertexEssence, skillTreeManager.getUnlockedNodes())
+            }
+        }
+
+        findViewById<TextView>(R.id.vertexEssenceCount).text = "Vertex Essence: $vertexEssence"
     }
 
     private fun loadPrestigeData() {
         val prefs = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
         vertexEssence = prefs.getInt("vertexEssence", 0)
-        startingDotsLevel = prefs.getInt("startingDots", 0)
-        baseSpeedLevel = prefs.getInt("baseSpeed", 0)
-        currencyMultiplierLevel = prefs.getInt("currencyMultiplier", 0)
+        
+        // Load skill levels
+        val skillLevels = mutableMapOf<String, Int>()
+        skillLevels["start_dots"] = prefs.getInt("skill_start_dots", 0)
+        skillLevels["base_speed"] = prefs.getInt("skill_base_speed", 0)
+        skillLevels["currency_gain"] = prefs.getInt("skill_currency_gain", 0)
+        
+        skillTreeManager.loadState(skillLevels)
+    }
+
+    private fun savePrestigeData() {
+        val prefs = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE).edit()
+        prefs.putInt("vertexEssence", vertexEssence)
+        
+        // Save skill levels
+        val skillLevels = skillTreeManager.getState()
+        skillLevels.forEach { (id, level) ->
+            prefs.putInt("skill_$id", level)
+        }
+        
+        prefs.apply()
     }
 
     private fun calculatePrestigeGain(currency: Double): Int {
@@ -58,60 +129,7 @@ class PrestigeActivity : AppCompatActivity() {
     private fun performPrestige(gain: Int) {
         vertexEssence += gain
         savePrestigeData()
-        
-        // Return result to MainActivity
         setResult(RESULT_OK)
         finish()
-    }
-
-    private fun setupMetaUpgradeButtons() {
-        findViewById<Button>(R.id.metaUpgrade1).setOnClickListener {
-            if (vertexEssence >= (startingDotsLevel + 1)) {
-                vertexEssence -= (startingDotsLevel + 1)
-                startingDotsLevel++
-                savePrestigeData()
-                updateMetaUpgradeButtons()
-            }
-        }
-
-        findViewById<Button>(R.id.metaUpgrade2).setOnClickListener {
-            if (vertexEssence >= (baseSpeedLevel + 2)) {
-                vertexEssence -= (baseSpeedLevel + 2)
-                baseSpeedLevel++
-                savePrestigeData()
-                updateMetaUpgradeButtons()
-            }
-        }
-
-        findViewById<Button>(R.id.metaUpgrade3).setOnClickListener {
-            if (vertexEssence >= (currencyMultiplierLevel + 3)) {
-                vertexEssence -= (currencyMultiplierLevel + 3)
-                currencyMultiplierLevel++
-                savePrestigeData()
-                updateMetaUpgradeButtons()
-            }
-        }
-    }
-
-    private fun updateMetaUpgradeButtons() {
-        findViewById<Button>(R.id.metaUpgrade1).text = 
-            "Starting Dots +1 (Cost: ${startingDotsLevel + 1})"
-        findViewById<Button>(R.id.metaUpgrade2).text = 
-            "Base Speed +10% (Cost: ${baseSpeedLevel + 2})"
-        findViewById<Button>(R.id.metaUpgrade3).text = 
-            "Currency Gain +20% (Cost: ${currencyMultiplierLevel + 3})"
-        
-        findViewById<TextView>(R.id.vertexEssenceCount).text = 
-            "Vertex Essence: $vertexEssence"
-    }
-
-    private fun savePrestigeData() {
-        getSharedPreferences("PrestigeData", Context.MODE_PRIVATE).edit().apply {
-            putInt("vertexEssence", vertexEssence)
-            putInt("startingDots", startingDotsLevel)
-            putInt("baseSpeed", baseSpeedLevel)
-            putInt("currencyMultiplier", currencyMultiplierLevel)
-            apply()
-        }
     }
 } 

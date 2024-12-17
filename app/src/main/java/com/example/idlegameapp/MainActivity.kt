@@ -258,24 +258,15 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
             flatUpgradeCost = 10.0
             multiplierUpgradeCost = 50.0
             exponentUpgradeCost = 200.0
+            flatUpgradeCount = 0
+            speedUpgradeCount = 0
+            lineUpgradeCount = 0
+            currencyMultiplierCount = 0
+            currencyPerHit = 1
             gameView.resetGame()
             
-            // Apply meta upgrades
-            val prefs = getSharedPreferences("PrestigeData", Context.MODE_PRIVATE)
-            val startingDots = prefs.getInt("startingDots", 0)
-            val baseSpeedBonus = prefs.getInt("baseSpeed", 0)
-            val currencyMultiplier = prefs.getInt("currencyMultiplier", 0)
-            
-            // Apply starting dots
-            repeat(startingDots) {
-                gameView.addDotToLine()
-            }
-            
-            // Apply speed bonus
-            gameView.setBaseSpeedBonus(baseSpeedBonus * 0.1f)
-            
-            // Set currency multiplier
-            gameView.setCurrencyMultiplier(1.0f + (currencyMultiplier * 0.2f))
+            // Add initial dot
+            gameView.addDotToLine()
             
             updateUI()
         }
