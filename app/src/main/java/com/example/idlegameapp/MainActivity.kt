@@ -55,6 +55,8 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
         }
     }
 
+    private var totalCurrencyEarned = 0f
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -86,15 +88,18 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
         }
 
         findViewById<Button>(R.id.statsButton).setOnClickListener {
-            // Stats screen navigation (to be implemented)
+            startActivity(Intent(this, StatsActivity::class.java))
         }
 
         findViewById<Button>(R.id.settingsButton).setOnClickListener {
-            // Settings screen navigation (to be implemented)
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
 
         // Start tracking currency per second
         currencyTracker.post(currencyTrackerRunnable)
+
+        totalCurrencyEarned = getSharedPreferences("GameData", MODE_PRIVATE)
+            .getFloat("totalCurrencyEarned", 0f)
     }
 
     private fun startIncrementing() {
@@ -143,25 +148,37 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
         }
     }
 
-    private fun calculateCurrencyPerSecond(): Float {
+    private fun calculateCurrencyPerSecond(): Double {
         val dotsCount = gameView.getDotsCount()
         val speed = gameView.dotSpeed
-        val sidesCount = gameView.getCurrentSides()
+        val sideLength = gameView.getSideLength()
         
-        // Each dot hits a vertex when it completes a line segment
-        // Speed is in units per second (how many line segments completed per second)
-        val hitsPerSecondPerDot = speed
+        // Debug logging
+        Log.d("CurrencyCalc", "Dots: $dotsCount, Speed: $speed, SideLength: $sideLength")
+        
+        // Prevent division by zero or invalid calculations
+        if (sideLength <= 0 || speed <= 0 || dotsCount <= 0) {
+            Log.d("CurrencyCalc", "Invalid values detected")
+            return 0.0
+        }
+        
+        // Time to traverse one side = length / speed
+        val timePerSide = sideLength / speed
+        Log.d("CurrencyCalc", "Time per side: $timePerSide")
+        
+        // Prevent division by zero
+        if (timePerSide <= 0) {
+            Log.d("CurrencyCalc", "Invalid time per side")
+            return 0.0
+        }
+        
+        // Hits per second per dot = 1 / time per side
+        val hitsPerSecondPerDot = 1.0 / timePerSide
+        Log.d("CurrencyCalc", "Hits per second per dot: $hitsPerSecondPerDot")
         
         // Total currency per second = hits per second * number of dots * currency per hit
         val result = hitsPerSecondPerDot * dotsCount * currencyPerHit
-        
-        Log.d("CurrencyCalc", """
-            Dots: $dotsCount
-            Speed: $speed
-            Sides: $sidesCount
-            Hits/sec/dot: $hitsPerSecondPerDot
-            Final result: $result
-        """.trimIndent())
+        Log.d("CurrencyCalc", "Final result: $result")
         
         return result
     }
@@ -188,12 +205,30 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
     }
 
     override fun onDotHitVertex() {
-        currency = (currency + currencyPerHit).roundToInt().toDouble()
+        val earned = currencyPerHit.toDouble()
+        currency = (currency + earned).roundToInt().toDouble()
+        totalCurrencyEarned += earned.toFloat()
+        
+        // Save total currency earned
+        getSharedPreferences("GameData", MODE_PRIVATE)
+            .edit()
+            .putFloat("totalCurrencyEarned", totalCurrencyEarned)
+            .apply()
+            
         updateUI()
     }
 
     override fun onDotHitEnd() {
-        currency = (currency + currencyPerHit).roundToInt().toDouble()
+        val earned = currencyPerHit.toDouble()
+        currency = (currency + earned).roundToInt().toDouble()
+        totalCurrencyEarned += earned.toFloat()
+        
+        // Save total currency earned
+        getSharedPreferences("GameData", MODE_PRIVATE)
+            .edit()
+            .putFloat("totalCurrencyEarned", totalCurrencyEarned)
+            .apply()
+            
         updateUI()
     }
 
@@ -232,5 +267,28 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
         currencyTracker.removeCallbacks(currencyTrackerRunnable)
+    }
+
+    private fun updateCurrency(deltaTime: Float) {
+        val earned = calculateCurrencyPerSecond() * deltaTime
+        currency += earned
+        totalCurrencyEarned += earned.toFloat()
+        
+        // Save total currency earned every time currency updates
+        getSharedPreferences("GameData", MODE_PRIVATE)
+            .edit()
+            .putFloat("totalCurrencyEarned", totalCurrencyEarned)
+            .apply()
+            
+        updateUI()
+    }
+
+    // Add this function to save currency when the app is closed
+    override fun onPause() {
+        super.onPause()
+        getSharedPreferences("GameData", MODE_PRIVATE)
+            .edit()
+            .putFloat("totalCurrencyEarned", totalCurrencyEarned)
+            .apply()
     }
 }
