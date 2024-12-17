@@ -42,8 +42,8 @@ class GameView @JvmOverloads constructor(
         color = Color.WHITE
         strokeWidth = 5f
     }
-    private val baseSpeed = 0.2f
-    private var speedLevel = 0
+    private val baseSpeed = 0.2f  
+    var speedLevel = 0
     private val baseRevolutionTime = 5f // Time in seconds for one revolution
     
     // Calculate the speed multiplier based on number of sides
@@ -62,6 +62,8 @@ class GameView @JvmOverloads constructor(
     private var baseSpeedBonus = 0f
     private var currencyMultiplier = 1f
     private var sideLength: Float = 0f
+    private var updateCounter = 0
+    private var lastLogTime = System.currentTimeMillis()
 
     init {
         // Initialize with triangle but no dots
@@ -97,13 +99,36 @@ class GameView @JvmOverloads constructor(
     }
 
     private fun updateDotPositions(deltaTime: Float) {
+        updateCounter++
+        
+        // Log every second
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastLogTime >= 1000) {
+            Log.d("GameView", "Updates per second: $updateCounter")
+            // Only log dot movement every 2 seconds
+            if ((currentTime / 2000) % 2 == 0L) {
+                val sampleDotMovement = dotSpeed * deltaTime
+                val actualDistancePerSecond = sampleDotMovement * updateCounter
+                Log.d("GameView", """
+                    Dot Speed Debug:
+                    - Base Speed: $baseSpeed
+                    - Speed Level: $speedLevel
+                    - Polygon Multiplier: $polygonSpeedMultiplier
+                    - Delta Time: $deltaTime
+                    - Movement per update: $sampleDotMovement
+                    - Movement per second: $actualDistancePerSecond
+                """.trimIndent())
+            }
+            updateCounter = 0
+            lastLogTime = currentTime
+        }
+
         for (line in lines) {
             val dotsToMove = ArrayList(line.dots)
             line.dots.clear()
             
             for (dot in dotsToMove) {
                 dot.position += dotSpeed * deltaTime * dot.direction
-                
                 if (dot.position >= 1f) {
                     // Move to next line
                     val currentLineIndex = lines.indexOf(line)

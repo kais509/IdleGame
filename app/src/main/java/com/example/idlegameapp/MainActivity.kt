@@ -57,6 +57,13 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
 
     private var totalCurrencyEarned = 0f
 
+    private var lastCurrencyLogTime = 0L
+
+    private var flatUpgradeCount = 0
+    private var speedUpgradeCount = 0
+    private var lineUpgradeCount = 0
+    private var currencyMultiplierCount = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -116,6 +123,7 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
             currency = (currency - flatUpgradeCost).roundToInt().toDouble()
             gameView.addDotToLine()
             flatUpgradeCost = (flatUpgradeCost * 1.5).roundToInt().toDouble()
+            flatUpgradeCount++
             updateUI()
         }
     }
@@ -125,6 +133,7 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
             currency = (currency - multiplierUpgradeCost).roundToInt().toDouble()
             gameView.increaseSpeed()
             multiplierUpgradeCost = (multiplierUpgradeCost * 2.0).roundToInt().toDouble()
+            speedUpgradeCount++
             updateUI()
         }
     }
@@ -134,6 +143,7 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
             currency = (currency - exponentUpgradeCost).roundToInt().toDouble()
             gameView.addLine()
             exponentUpgradeCost = (exponentUpgradeCost * 2.0).roundToInt().toDouble()
+            lineUpgradeCount++
             updateUI()
         }
     }
@@ -144,41 +154,50 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
             currencyMultiplierLevel++
             currencyPerHit++
             currencyMultiplierCost = (currencyMultiplierCost * 1.8).roundToInt().toDouble()
+            currencyMultiplierCount++
             updateUI()
         }
     }
 
-    private fun calculateCurrencyPerSecond(): Double {
+    private fun calculateCurrencyPerSecond(): Float {
         val dotsCount = gameView.getDotsCount()
-        val speed = gameView.dotSpeed
-        val sideLength = gameView.getSideLength()
+        val baseSpeed = gameView.getBaseSpeed()
+        val speedLevel = gameView.speedLevel
+        val polygonMultiplier = gameView.getCurrentSides() / 3f
+        val deltaTime = 0.016f  // Matching GameView's update interval
+        val updatesPerSecond = 60f  // Based on the 16ms update interval
         
-        // Debug logging
-        Log.d("CurrencyCalc", "Dots: $dotsCount, Speed: $speed, SideLength: $sideLength")
+        // Calculate movement the same way GameView does
+        val movementPerUpdate = baseSpeed * Math.pow(1.1, speedLevel.toDouble()).toFloat() * 
+            polygonMultiplier * deltaTime
+        val linesPerSecond = movementPerUpdate * updatesPerSecond  // This is our actualDistancePerSecond
         
-        // Prevent division by zero or invalid calculations
-        if (sideLength <= 0 || speed <= 0 || dotsCount <= 0) {
-            Log.d("CurrencyCalc", "Invalid values detected")
-            return 0.0
+        // Only log every 2 seconds
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastCurrencyLogTime >= 2000) {
+            Log.d("CurrencyCalc", """
+                Currency Calculation:
+                - Dots: $dotsCount
+                - Movement per update: ${movementPerUpdate * 100}% of line
+                - Lines completed per second: $linesPerSecond
+                - Currency per hit: $currencyPerHit
+                """.trimIndent())
         }
         
-        // Time to traverse one side = length / speed
-        val timePerSide = sideLength / speed
-        Log.d("CurrencyCalc", "Time per side: $timePerSide")
+        // Each dot completes 'linesPerSecond' lines per second
+        // Each line has currentSides vertices
+        // Each vertex hit gives currencyPerHit currency
+        val hitsPerSecond = linesPerSecond * dotsCount
+        val result = hitsPerSecond * currencyPerHit
         
-        // Prevent division by zero
-        if (timePerSide <= 0) {
-            Log.d("CurrencyCalc", "Invalid time per side")
-            return 0.0
+        if (currentTime - lastCurrencyLogTime >= 2000) {
+            Log.d("CurrencyCalc", """
+                Final calculation:
+                - Hits per second: $hitsPerSecond
+                - Currency per second: $result
+                """.trimIndent())
+            lastCurrencyLogTime = currentTime
         }
-        
-        // Hits per second per dot = 1 / time per side
-        val hitsPerSecondPerDot = 1.0 / timePerSide
-        Log.d("CurrencyCalc", "Hits per second per dot: $hitsPerSecondPerDot")
-        
-        // Total currency per second = hits per second * number of dots * currency per hit
-        val result = hitsPerSecondPerDot * dotsCount * currencyPerHit
-        Log.d("CurrencyCalc", "Final result: $result")
         
         return result
     }
@@ -190,18 +209,17 @@ class MainActivity : AppCompatActivity(), DotCollisionListener {
         currencyTextView.text = "Currency: ${wholeNumberFormatter.format(currency.roundToInt())}"
         
         val currencyPerSecond = calculateCurrencyPerSecond()
-        // Add safety check for display
         val displayValue = if (currencyPerSecond.isFinite()) currencyPerSecond else 0.0
         currencyPerSecondView.text = "(${decimalFormatter.format(displayValue)}/sec)"
         
         findViewById<Button>(R.id.flatUpgradeButton).text = 
-            "Add Dot\n(${wholeNumberFormatter.format(flatUpgradeCost.roundToInt())})"
+            "Add Dot ($flatUpgradeCount)\n(${wholeNumberFormatter.format(flatUpgradeCost.roundToInt())})"
         findViewById<Button>(R.id.multiplierUpgradeButton).text = 
-            "Speed x1.1\n(${wholeNumberFormatter.format(multiplierUpgradeCost.roundToInt())})"
+            "Speed x1.1 ($speedUpgradeCount)\n(${wholeNumberFormatter.format(multiplierUpgradeCost.roundToInt())})"
         findViewById<Button>(R.id.exponentUpgradeButton).text = 
-            "New Line\n(${wholeNumberFormatter.format(exponentUpgradeCost.roundToInt())})"
+            "New Line ($lineUpgradeCount)\n(${wholeNumberFormatter.format(exponentUpgradeCost.roundToInt())})"
         findViewById<Button>(R.id.autoClickerUpgradeButton).text = 
-            "+${currencyPerHit}/hit\n(${wholeNumberFormatter.format(currencyMultiplierCost.roundToInt())})"
+            "+${currencyPerHit}/hit ($currencyMultiplierCount)\n(${wholeNumberFormatter.format(currencyMultiplierCost.roundToInt())})"
     }
 
     override fun onDotHitVertex() {
